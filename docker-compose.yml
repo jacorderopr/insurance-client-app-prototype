@@ -27,7 +27,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/insurance_clients_db
       SPRING_DATASOURCE_USERNAME: demouser
       SPRING_DATASOURCE_PASSWORD: demopass
-      SPRING_SQL_INIT_MODE: always # Ensure schema.sql is run
+      SPRING_SQL_INIT_MODE: never # Set to 'always' to have shema.sql and data.sql always run on startup
       FILE_UPLOAD_DIR: /app/uploads # Path inside the container for uploads
     volumes:
       - backend_uploads:/app/uploads # Persist uploaded files
