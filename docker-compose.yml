@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:15-alpine # Using a specific version is good practice
+    container_name: insurance_postgres_db
+    environment:
+      POSTGRES_USER: demouser
+      POSTGRES_PASSWORD: demopass
+      POSTGRES_DB: insurance_clients_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persist database data
+    ports:
+      - "5432:5432" # Map host port 5432 to container port 5432
+    restart: unless-stopped
+
+  spring_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile # Use the Dockerfile that builds inside Docker for simplicity here
+    container_name: insurance_spring_backend
+    depends_on:
+      - postgres_db
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/insurance_clients_db
+      SPRING_DATASOURCE_USERNAME: demouser
+      SPRING_DATASOURCE_PASSWORD: demopass
+      SPRING_SQL_INIT_MODE: always # Ensure schema.sql is run
+      FILE_UPLOAD_DIR: /app/uploads # Path inside the container for uploads
+    volumes:
+      - backend_uploads:/app/uploads # Persist uploaded files
+      # If you want live reload for backend Java code (requires devtools and specific setup, more advanced)
+      # - ./backend/src:/app/src
+    restart: on-failure
+
+  next_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: insurance_next_frontend
+    depends_on:
+      - spring_backend
+    ports:
+      - "3000:3000" # Map host port 3000 to container port 3000
+    volumes:
+      - ./frontend:/app # Mount host frontend directory to container for hot reloading
+      - /app/node_modules # Don't overwrite node_modules from host
+      - /app/.next # Persist .next build cache
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api # URL for frontend to call backend (via host)
+      # For server-side rendering or API routes in Next.js calling backend directly:
+      # INTERNAL_API_URL: http://spring_backend:8080/api
+    restart: unless-stopped
+
+volumes:
+  postgres_data: # Define the named volume for PostgreSQL data
+  backend_uploads: # Define the named volume for backend uploads

@@ -51,6 +51,9 @@ backend/uploads/
 *.war
 *.ear
 
+# Next.js specific
+frontend/next-env.d.ts
+
 # Other specific files
 # For example, if you have any local database files not managed by Docker volumes:
 # *.db
